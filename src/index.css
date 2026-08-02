@@ -653,3 +653,75 @@ input {
   font-size: 11px;
   font-weight: 700;
 }
+/* ---------- Week picker & card header row ---------- */
+.card-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.week-picker {
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: var(--font-body);
+  color: var(--ink);
+  background: var(--paper-raised);
+}
+
+/* ---------- Status badges ---------- */
+.status-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 3px 8px;
+  border-radius: 999px;
+}
+
+.status-pending {
+  background: #fdf3e2;
+  color: #a06a10;
+}
+
+.status-approved {
+  background: #e5f3ee;
+  color: var(--teal);
+}
+
+.status-rejected {
+  background: #fbe8e6;
+  color: var(--danger);
+}
+
+/* ---------- Approvals ---------- */
+.approval-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-approve {
+  background: var(--teal);
+  color: white;
+  padding: 6px 14px;
+  font-size: 13px;
+}
+
+.btn-reject {
+  background: var(--paper);
+  border: 1px solid var(--danger);
+  color: var(--danger);
+  padding: 6px 14px;
+  font-size: 13px;
+}
+
+.btn-approve:disabled,
+.btn-reject:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

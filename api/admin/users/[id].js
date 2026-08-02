@@ -24,12 +24,14 @@ export default async function handler(req, res) {
     if (!user) return res.status(404).json({ error: "Worker not found." });
 
     const hoursResult = await query(
-      `SELECT id, entry_date, hours, note FROM hours_entries
+      `SELECT id, entry_date, hours, note, status FROM hours_entries
        WHERE user_id = $1 ORDER BY entry_date DESC`,
       [id]
     );
 
-    const totalHours = hoursResult.rows.reduce((sum, r) => sum + Number(r.hours), 0);
+    const totalHours = hoursResult.rows
+      .filter((r) => r.status === "approved")
+      .reduce((sum, r) => sum + Number(r.hours), 0);
 
     let bankAccountNumber = "";
     try {
@@ -58,6 +60,7 @@ export default async function handler(req, res) {
         date: r.entry_date,
         hours: Number(r.hours),
         note: r.note || "",
+        status: r.status,
       })),
     });
   }

@@ -1,32 +1,45 @@
 import React, { useEffect, useState } from "react";
 import { getTopEarnersAsync } from "../services/dataService.js";
+import WeekPicker from "./WeekPicker.jsx";
 
 export default function TopEarners({ currentUserId, onSelectWorker }) {
-  const [rows, setRows] = useState([]);
+  const [week, setWeek] = useState(null);
+  const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    getTopEarnersAsync()
-      .then(setRows)
+    if (!week) return;
+    setLoading(true);
+    getTopEarnersAsync(week)
+      .then(setData)
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
-  }, []);
+  }, [week]);
+
+  const rows = data?.rows || [];
 
   return (
     <div className="card">
-      <h2 className="card-title">Top earners</h2>
-      <p className="card-subtitle">
-        Ranked by total earnings, all-time.
-        {onSelectWorker && " Click a name to view their profile."}
-      </p>
+      <div className="card-header-row">
+        <div>
+          <h2 className="card-title">Top earners</h2>
+          <p className="card-subtitle">
+            Only workers with approved earnings that week are shown.
+            {onSelectWorker && " Click a name to view their profile."}
+          </p>
+        </div>
+        <WeekPicker selectedWeek={week} onChange={setWeek} />
+      </div>
 
       {error && <p className="field-error">{error}</p>}
       {loading ? (
         <p>Loading...</p>
       ) : (
         <ol className="leaderboard">
-          {rows.length === 0 && <li className="empty-row">No data yet.</li>}
+          {rows.length === 0 && (
+            <li className="empty-row">No approved earnings for this week yet.</li>
+          )}
           {rows.map((row, i) => (
             <li
               key={row.userId}

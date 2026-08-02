@@ -17,7 +17,7 @@ export default async function handler(req, res) {
   const result = await query(`
     SELECT u.id, u.email, u.role, u.avatar_url,
            COALESCE(NULLIF(u.full_name, ''), u.email) AS name,
-           COALESCE(SUM(h.hours), 0) AS total_hours
+           COALESCE(SUM(h.hours) FILTER (WHERE h.status = 'approved'), 0) AS total_hours
     FROM users u
     LEFT JOIN hours_entries h ON h.user_id = u.id
     GROUP BY u.id

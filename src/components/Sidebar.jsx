@@ -8,6 +8,7 @@ const WORKER_NAV = [
 
 const ADMIN_NAV = [
   { id: "overview", label: "Overview" },
+  { id: "approvals", label: "Approvals" },
   { id: "workers", label: "Workers" },
   { id: "leaderboard", label: "Top Earners" },
   { id: "manage-admins", label: "Manage Admins" },

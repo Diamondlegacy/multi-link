@@ -8,6 +8,7 @@ import AdminOverview from "./AdminOverview.jsx";
 import WorkersList from "./WorkersList.jsx";
 import WorkerProfileView from "./WorkerProfileView.jsx";
 import ManageAdmins from "./ManageAdmins.jsx";
+import PendingApprovals from "./PendingApprovals.jsx";
 
 export default function Dashboard({ user, onProfileUpdated }) {
   const isAdmin = user.role === "admin";
@@ -40,6 +41,7 @@ export default function Dashboard({ user, onProfileUpdated }) {
         ) : (
           <>
             {view === "overview" && isAdmin && <AdminOverview />}
+            {view === "approvals" && isAdmin && <PendingApprovals />}
             {view === "workers" && isAdmin && (
               <WorkersList onSelectWorker={openWorkerProfile} />
             )}

@@ -3,10 +3,6 @@
  * ------------------------------------------------------------------
  * This is the ONLY file that talks to the backend. Every component
  * calls these functions instead of making fetch() calls directly.
- *
- * Now backed by real serverless functions in /api, a real Postgres
- * database, hashed passwords, and encrypted bank account numbers.
- * See /api/_lib/schema.sql and the README for one-time setup.
  * ------------------------------------------------------------------
  */
 
@@ -97,22 +93,30 @@ export async function logHoursAsync({ date, hours, note }) {
   await apiFetch("/hours", { method: "POST", body: { date, hours, note } });
 }
 
-export async function getHoursForUserAsync() {
-  return apiFetch("/hours");
+export async function getHoursForUserAsync(week) {
+  const q = week ? `?week=${week}` : "";
+  return apiFetch(`/hours${q}`);
 }
 
 export async function deleteHoursEntryAsync(entryId) {
   await apiFetch(`/hours?id=${encodeURIComponent(entryId)}`, { method: "DELETE" });
 }
 
+// ---------- weeks ----------
+export async function getWeeksAsync() {
+  return apiFetch("/weeks");
+}
+
 // ---------- leaderboard ----------
-export async function getTopEarnersAsync() {
-  return apiFetch("/leaderboard");
+export async function getTopEarnersAsync(week) {
+  const q = week ? `?week=${week}` : "";
+  return apiFetch(`/leaderboard${q}`);
 }
 
 // ---------- admin ----------
-export async function getAdminOverviewAsync() {
-  return apiFetch("/admin/overview");
+export async function getAdminOverviewAsync(week) {
+  const q = week ? `?week=${week}` : "";
+  return apiFetch(`/admin/overview${q}`);
 }
 
 export async function getAdminWorkersAsync() {
@@ -125,4 +129,13 @@ export async function getWorkerProfileAsync(userId) {
 
 export async function setUserRoleAsync(userId, role) {
   return apiFetch(`/admin/users/${userId}`, { method: "PUT", body: { role } });
+}
+
+// ---------- approvals ----------
+export async function getPendingApprovalsAsync() {
+  return apiFetch("/admin/pending");
+}
+
+export async function decideHoursAsync(entryId, action) {
+  return apiFetch(`/admin/pending/${entryId}`, { method: "PUT", body: { action } });
 }

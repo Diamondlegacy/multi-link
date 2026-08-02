@@ -5,8 +5,10 @@ import {
   deleteHoursEntryAsync,
   getPayRateAsync,
 } from "../services/dataService.js";
+import WeekPicker from "./WeekPicker.jsx";
 
 export default function HoursTracker({ user }) {
+  const [week, setWeek] = useState(null);
   const [entries, setEntries] = useState([]);
   const [rate, setRate] = useState(0);
   const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
@@ -15,13 +17,15 @@ export default function HoursTracker({ user }) {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
 
-  async function refresh() {
+  async function refresh(weekToLoad) {
+    if (!weekToLoad) return;
+    setLoading(true);
     try {
-      const [entriesData, rateData] = await Promise.all([
-        getHoursForUserAsync(),
+      const [hoursData, rateData] = await Promise.all([
+        getHoursForUserAsync(weekToLoad),
         getPayRateAsync(),
       ]);
-      setEntries(entriesData);
+      setEntries(hoursData.entries);
       setRate(rateData);
     } catch (err) {
       setError(err.message);
@@ -31,8 +35,8 @@ export default function HoursTracker({ user }) {
   }
 
   useEffect(() => {
-    refresh();
-  }, []);
+    refresh(week);
+  }, [week]);
 
   async function handleAdd(e) {
     e.preventDefault();
@@ -42,7 +46,7 @@ export default function HoursTracker({ user }) {
       await logHoursAsync({ date, hours, note });
       setHours("");
       setNote("");
-      refresh();
+      refresh(week);
     } catch (err) {
       setError(err.message);
     }
@@ -51,24 +55,32 @@ export default function HoursTracker({ user }) {
   async function handleDelete(id) {
     try {
       await deleteHoursEntryAsync(id);
-      refresh();
+      refresh(week);
     } catch (err) {
       setError(err.message);
     }
   }
 
-  const totalHours = entries.reduce((sum, e) => sum + e.hours, 0);
-  const totalPay = totalHours * rate;
-
-  if (loading) return <div className="card">Loading...</div>;
+  const approvedHours = entries
+    .filter((e) => e.status === "approved")
+    .reduce((sum, e) => sum + e.hours, 0);
+  const pendingHours = entries
+    .filter((e) => e.status === "pending")
+    .reduce((sum, e) => sum + e.hours, 0);
+  const approvedPay = approvedHours * rate;
 
   return (
     <div className="card">
-      <h2 className="card-title">Hours & pay</h2>
-      <p className="card-subtitle">
-        Current rate: <strong>{formatMoney(rate)}</strong> / hour
-        {rate === 0 && " — not set yet, ask your admin"}
-      </p>
+      <div className="card-header-row">
+        <div>
+          <h2 className="card-title">Hours & pay</h2>
+          <p className="card-subtitle">
+            Current rate: <strong>{formatMoney(rate)}</strong> / hour
+            {rate === 0 && " — not set yet, ask your admin"}
+          </p>
+        </div>
+        <WeekPicker selectedWeek={week} onChange={setWeek} />
+      </div>
 
       <form onSubmit={handleAdd} className="hours-form">
         <label className="field">
@@ -104,13 +116,19 @@ export default function HoursTracker({ user }) {
 
       <div className="stub">
         <div className="stub-row">
-          <span>Total hours logged</span>
-          <span>{totalHours.toFixed(2)}</span>
+          <span>Approved hours this week</span>
+          <span>{approvedHours.toFixed(2)}</span>
         </div>
+        {pendingHours > 0 && (
+          <div className="stub-row">
+            <span>Pending approval</span>
+            <span>{pendingHours.toFixed(2)} hrs</span>
+          </div>
+        )}
         <div className="stub-perforation" />
         <div className="stub-row stub-total">
-          <span>Total earned</span>
-          <span>{formatMoney(totalPay)}</span>
+          <span>Earned this week</span>
+          <span>{formatMoney(approvedPay)}</span>
         </div>
       </div>
 
@@ -120,14 +138,15 @@ export default function HoursTracker({ user }) {
             <th>Date</th>
             <th>Hours</th>
             <th>Note</th>
+            <th>Status</th>
             <th></th>
           </tr>
         </thead>
         <tbody>
-          {entries.length === 0 && (
+          {!loading && entries.length === 0 && (
             <tr>
-              <td colSpan="4" className="empty-row">
-                No hours logged yet.
+              <td colSpan="5" className="empty-row">
+                No hours logged this week.
               </td>
             </tr>
           )}
@@ -137,12 +156,17 @@ export default function HoursTracker({ user }) {
               <td>{e.hours}</td>
               <td>{e.note || "—"}</td>
               <td>
-                <button
-                  className="link-btn danger"
-                  onClick={() => handleDelete(e.id)}
-                >
-                  Remove
-                </button>
+                <span className={`status-badge status-${e.status}`}>{e.status}</span>
+              </td>
+              <td>
+                {e.status === "pending" && (
+                  <button
+                    className="link-btn danger"
+                    onClick={() => handleDelete(e.id)}
+                  >
+                    Remove
+                  </button>
+                )}
               </td>
             </tr>
           ))}

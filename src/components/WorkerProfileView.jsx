@@ -62,7 +62,6 @@ export default function WorkerProfileView({ workerId, onBack }) {
             <dl className="detail-list">
               <div><dt>Phone</dt><dd>{data.profile.phone || "—"}</dd></div>
               <div><dt>Date of birth</dt><dd>{data.profile.dob || "—"}</dd></div>
-              <div><dt>Email</dt><dd>{data.profile.email || "—"}</dd></div>
               <div><dt>Bank name</dt><dd>{data.profile.bankName || "—"}</dd></div>
               <div><dt>Account holder</dt><dd>{data.profile.bankAccountName || "—"}</dd></div>
               <div><dt>Account number</dt><dd>{data.profile.bankAccountNumber || "—"}</dd></div>
@@ -73,17 +72,20 @@ export default function WorkerProfileView({ workerId, onBack }) {
             <h2 className="card-title">Hours log</h2>
             <table className="entries-table">
               <thead>
-                <tr><th>Date</th><th>Hours</th><th>Note</th></tr>
+                <tr><th>Date</th><th>Hours</th><th>Note</th><th>Status</th></tr>
               </thead>
               <tbody>
                 {data.hoursEntries.length === 0 && (
-                  <tr><td colSpan="3" className="empty-row">No hours logged yet.</td></tr>
+                  <tr><td colSpan="4" className="empty-row">No hours logged yet.</td></tr>
                 )}
                 {data.hoursEntries.map((e) => (
                   <tr key={e.id}>
                     <td>{e.date}</td>
                     <td>{e.hours}</td>
                     <td>{e.note || "—"}</td>
+                    <td>
+                      <span className={`status-badge status-${e.status}`}>{e.status}</span>
+                    </td>
                   </tr>
                 ))}
               </tbody>

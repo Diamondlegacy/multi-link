@@ -725,3 +725,51 @@ input {
   opacity: 0.5;
   cursor: not-allowed;
 }
+/* ---------- Small-screen fixes ---------- */
+@media (max-width: 480px) {
+  .navbar {
+    flex-wrap: wrap;
+    row-gap: 10px;
+  }
+
+  .navbar-user {
+    flex-wrap: wrap;
+    row-gap: 8px;
+  }
+
+  .navbar-username {
+    max-width: 140px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .leaderboard-row {
+    display: flex;
+    flex-wrap: wrap;
+    row-gap: 6px;
+    padding: 12px;
+  }
+
+  .leaderboard-rank {
+    flex: 0 0 20px;
+  }
+
+  .leaderboard-name {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .leaderboard-hours {
+    flex: 0 0 auto;
+    margin-left: 32px;
+  }
+
+  .leaderboard-amount {
+    flex: 1 0 auto;
+    text-align: right;
+  }
+}

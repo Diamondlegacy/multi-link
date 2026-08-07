@@ -15,7 +15,7 @@ export default async function handler(req, res) {
   const rate = rateResult.rows[0] ? Number(rateResult.rows[0].value) : 0;
 
   const result = await query(`
-    SELECT u.id, u.email, u.role, u.avatar_url,
+    SELECT u.id, u.email, u.role, u.avatar_url, u.has_release_badge,
            COALESCE(NULLIF(u.full_name, ''), u.email) AS name,
            COALESCE(SUM(h.hours) FILTER (WHERE h.status = 'approved'), 0) AS total_hours
     FROM users u
@@ -30,6 +30,7 @@ export default async function handler(req, res) {
     role: r.role,
     name: r.name,
     avatarUrl: r.avatar_url || "",
+    hasReleaseBadge: r.has_release_badge,
     totalHours: Number(r.total_hours),
     totalEarnings: Number(r.total_hours) * rate,
   }));

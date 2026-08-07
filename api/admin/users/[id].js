@@ -66,14 +66,29 @@ export default async function handler(req, res) {
   }
 
   if (req.method === "PUT") {
-    const { role } = req.body || {};
-    if (!["admin", "worker"].includes(role)) {
-      return res.status(400).json({ error: "Role must be 'admin' or 'worker'." });
+    const { role, hasReleaseBadge } = req.body || {};
+
+    if (role !== undefined) {
+      if (!["admin", "worker"].includes(role)) {
+        return res.status(400).json({ error: "Role must be 'admin' or 'worker'." });
+      }
+      if (id === authed.sub) {
+        return res.status(400).json({ error: "You can't change your own role." });
+      }
+      await query("UPDATE users SET role = $1 WHERE id = $2", [role, id]);
     }
-    if (id === authed.sub) {
-      return res.status(400).json({ error: "You can't change your own role." });
+
+    if (hasReleaseBadge !== undefined) {
+      await query("UPDATE users SET has_release_badge = $1 WHERE id = $2", [
+        Boolean(hasReleaseBadge),
+        id,
+      ]);
     }
-    await query("UPDATE users SET role = $1 WHERE id = $2", [role, id]);
+
+    if (role === undefined && hasReleaseBadge === undefined) {
+      return res.status(400).json({ error: "Nothing to update." });
+    }
+
     return res.status(200).json({ ok: true });
   }
 

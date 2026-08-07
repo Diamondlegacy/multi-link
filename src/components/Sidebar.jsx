@@ -2,6 +2,7 @@ import React from "react";
 
 const WORKER_NAV = [
   { id: "dashboard", label: "Dashboard" },
+  { id: "links", label: "Links" },
   { id: "leaderboard", label: "Top Earners" },
   { id: "profile", label: "My Profile" },
 ];
@@ -9,6 +10,7 @@ const WORKER_NAV = [
 const ADMIN_NAV = [
   { id: "overview", label: "Overview" },
   { id: "approvals", label: "Approvals" },
+  { id: "links", label: "Links" },
   { id: "workers", label: "Workers" },
   { id: "leaderboard", label: "Top Earners" },
   { id: "manage-admins", label: "Manage Admins" },

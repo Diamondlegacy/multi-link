@@ -93,3 +93,7 @@ export function decryptBankNumber(stored) {
   ]);
   return decrypted.toString("utf8");
 }
+// Same AES-256-GCM encryption, reused for link account/RDP passwords —
+// no reason to maintain two copies of the same crypto code.
+export const encryptSecret = encryptBankNumber;
+export const decryptSecret = decryptBankNumber;

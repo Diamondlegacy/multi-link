@@ -20,11 +20,11 @@ export default function LinksTab() {
     refresh();
   }, []);
 
-  async function handleRelease(id) {
-    setBusyId(id);
+  async function handleRelease(linkId) {
+    setBusyId(linkId);
     setError("");
     try {
-      await releaseLinkAsync(id);
+      await releaseLinkAsync(linkId);
       refresh();
     } catch (err) {
       setError(err.message);
@@ -33,11 +33,11 @@ export default function LinksTab() {
     }
   }
 
-  async function handleClaim(id) {
-    setBusyId(id);
+  async function handleClaim(assignmentId) {
+    setBusyId(assignmentId);
     setError("");
     try {
-      await claimLinkAsync(id);
+      await claimLinkAsync(assignmentId);
       refresh();
     } catch (err) {
       setError(err.message);
@@ -55,7 +55,7 @@ export default function LinksTab() {
       <div className="card" style={{ marginBottom: 24 }}>
         <h2 className="card-title">My links</h2>
         <p className="card-subtitle">
-          Assigned to you for the day. Can't work today? Release it so it can be picked up.
+          Assigned to you until you release it or an admin reassigns it.
         </p>
 
         {data.myLinks.length === 0 && (
@@ -66,12 +66,11 @@ export default function LinksTab() {
 
         <div className="link-cards">
           {data.myLinks.map((link) => (
-            <div className="link-card" key={link.id}>
+            <div className="link-card" key={link.assignmentId}>
               <div className="link-card-header">
                 <span className="link-card-name">{link.accountName}</span>
                 <span className="status-badge status-approved">assigned</span>
               </div>
-              <p className="link-card-date">For {link.assignedDate}</p>
               <div className="link-card-body">
                 <div className="secret-field">
                   <span className="secret-label">Email</span>
@@ -93,10 +92,10 @@ export default function LinksTab() {
               <button
                 className="btn btn-reject"
                 style={{ marginTop: 14 }}
-                disabled={busyId === link.id}
-                onClick={() => handleRelease(link.id)}
+                disabled={busyId === link.linkId}
+                onClick={() => handleRelease(link.linkId)}
               >
-                Release for today
+                Release this link
               </button>
             </div>
           ))}
@@ -107,7 +106,7 @@ export default function LinksTab() {
         <div className="card">
           <h2 className="card-title">Released links</h2>
           <p className="card-subtitle">
-            Released by other workers today. Claim one to have it assigned to you,
+            Released by other workers. Claim one to have it assigned to you,
             with full credentials revealed once claimed.
           </p>
 
@@ -119,14 +118,12 @@ export default function LinksTab() {
 
           <div className="link-cards">
             {data.releasedLinks.map((link) => (
-              <div className="link-card link-card-released" key={link.id}>
+              <div className="link-card link-card-released" key={link.assignmentId}>
                 <div className="link-card-header">
                   <span className="link-card-name">{link.accountName}</span>
                   <span className="status-badge status-pending">released</span>
                 </div>
-                <p className="link-card-date">
-                  Was for {link.assignedDate} — released by {link.releasedBy}
-                </p>
+                <p className="link-card-date">Released by {link.releasedBy}</p>
                 <div className="secret-field">
                   <span className="secret-label">Email</span>
                   <div className="secret-row">
@@ -144,8 +141,8 @@ export default function LinksTab() {
                 <button
                   className="btn btn-approve"
                   style={{ marginTop: 14 }}
-                  disabled={busyId === link.id}
-                  onClick={() => handleClaim(link.id)}
+                  disabled={busyId === link.assignmentId}
+                  onClick={() => handleClaim(link.assignmentId)}
                 >
                   Claim this link
                 </button>

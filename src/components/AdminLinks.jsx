@@ -22,7 +22,7 @@ export default function AdminLinks() {
   });
   const [creating, setCreating] = useState(false);
 
-  const [assignPicks, setAssignPicks] = useState({});
+  const [picks, setPicks] = useState({});
 
   function refresh() {
     setLoading(true);
@@ -30,6 +30,15 @@ export default function AdminLinks() {
       .then(([linkRows, workerRows]) => {
         setLinks(linkRows);
         setWorkers(workerRows.filter((w) => w.role === "worker"));
+        const initialPicks = {};
+        linkRows.forEach((l) => {
+          const active = l.slots.filter((s) => s.status === "active");
+          initialPicks[l.id] = {
+            slot1: active[0]?.workerId || "",
+            slot2: active[1]?.workerId || "",
+          };
+        });
+        setPicks(initialPicks);
       })
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
@@ -54,22 +63,20 @@ export default function AdminLinks() {
     }
   }
 
-  function updatePick(linkId, field, value) {
-    setAssignPicks((prev) => ({
-      ...prev,
-      [linkId]: { ...prev[linkId], [field]: value },
-    }));
+  function updatePick(linkId, slot, value) {
+    setPicks((prev) => ({ ...prev, [linkId]: { ...prev[linkId], [slot]: value } }));
   }
 
   async function handleAssign(linkId) {
-    const pick = assignPicks[linkId];
-    if (!pick?.workerId || !pick?.date) {
-      setError("Pick a worker and a date before assigning.");
+    const pick = picks[linkId] || {};
+    const workerIds = [pick.slot1, pick.slot2].filter(Boolean);
+    if (workerIds.length === 0) {
+      setError("Pick at least one worker before saving.");
       return;
     }
     setError("");
     try {
-      await assignLinkAsync(linkId, pick);
+      await assignLinkAsync(linkId, workerIds);
       refresh();
     } catch (err) {
       setError(err.message);
@@ -92,7 +99,7 @@ export default function AdminLinks() {
         <h2 className="card-title">Add a new link</h2>
         <p className="card-subtitle">
           The account and remote desktop passwords are encrypted before they're
-          ever stored, and are only shown to the worker it's assigned to.
+          ever stored, and are only shown to whoever it's assigned to.
         </p>
         <form onSubmit={handleCreate} className="grid-form">
           <label className="field">
@@ -144,6 +151,7 @@ export default function AdminLinks() {
 
       <div className="card">
         <h2 className="card-title">All links</h2>
+        <p className="card-subtitle">Assign each link to up to 2 workers.</p>
         {loading ? (
           <p>Loading...</p>
         ) : (
@@ -155,42 +163,49 @@ export default function AdminLinks() {
               <div className="link-card" key={link.id}>
                 <div className="link-card-header">
                   <span className="link-card-name">{link.accountName}</span>
-                  <span className={`status-badge status-${link.status === "assigned" ? "approved" : link.status === "released" ? "pending" : "rejected"}`}>
-                    {link.status}
-                  </span>
                 </div>
                 <p className="link-card-date">{link.accountEmail}</p>
-                {link.worker && (
-                  <p className="link-card-date">
-                    {link.status === "released" ? "Was" : "Currently"} assigned to{" "}
-                    <strong>{link.worker.name}</strong>
-                    {link.assignedDate && ` for ${link.assignedDate}`}
-                  </p>
-                )}
                 {link.notes && <p className="link-card-date">Notes: {link.notes}</p>}
+
+                {link.slots.length > 0 && (
+                  <div className="link-card-body">
+                    {link.slots.map((s) => (
+                      <div key={s.assignmentId} className="secret-row">
+                        <span className="secret-value">{s.workerName}</span>
+                        <span className={`status-badge status-${s.status === "active" ? "approved" : "pending"}`}>
+                          {s.status}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
 
                 <div className="assign-row">
                   <select
                     className="week-picker"
-                    value={assignPicks[link.id]?.workerId || ""}
-                    onChange={(e) => updatePick(link.id, "workerId", e.target.value)}
+                    value={picks[link.id]?.slot1 || ""}
+                    onChange={(e) => updatePick(link.id, "slot1", e.target.value)}
                   >
-                    <option value="">Assign to...</option>
+                    <option value="">Worker slot 1: none</option>
                     {workers.map((w) => (
                       <option key={w.id} value={w.id}>{w.name}</option>
                     ))}
                   </select>
-                  <input
-                    type="date"
+                  <select
                     className="week-picker"
-                    value={assignPicks[link.id]?.date || ""}
-                    onChange={(e) => updatePick(link.id, "date", e.target.value)}
-                  />
+                    value={picks[link.id]?.slot2 || ""}
+                    onChange={(e) => updatePick(link.id, "slot2", e.target.value)}
+                  >
+                    <option value="">Worker slot 2: none</option>
+                    {workers.map((w) => (
+                      <option key={w.id} value={w.id}>{w.name}</option>
+                    ))}
+                  </select>
                   <button className="btn btn-approve" onClick={() => handleAssign(link.id)}>
-                    Assign
+                    Save assignment
                   </button>
                   <button className="btn btn-reject" onClick={() => handleDelete(link.id)}>
-                    Delete
+                    Delete link
                   </button>
                 </div>
               </div>

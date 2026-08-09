@@ -144,12 +144,12 @@ export async function getMyLinksAsync() {
   return apiFetch("/links");
 }
 
-export async function releaseLinkAsync(id) {
-  return apiFetch("/links", { method: "PUT", body: { id, action: "release" } });
+export async function releaseLinkAsync(linkId) {
+  return apiFetch("/links", { method: "PUT", body: { action: "release", linkId } });
 }
 
-export async function claimLinkAsync(id) {
-  return apiFetch("/links", { method: "PUT", body: { id, action: "claim" } });
+export async function claimLinkAsync(assignmentId) {
+  return apiFetch("/links", { method: "PUT", body: { action: "claim", assignmentId } });
 }
 
 // ---------- links (admin management) ----------
@@ -161,14 +161,13 @@ export async function createLinkAsync(link) {
   return apiFetch("/admin/links", { method: "POST", body: link });
 }
 
-export async function assignLinkAsync(id, { workerId, date }) {
-  return apiFetch(`/admin/links/${id}`, { method: "PUT", body: { workerId, date } });
+export async function assignLinkAsync(id, workerIds) {
+  return apiFetch(`/admin/links?id=${encodeURIComponent(id)}`, {
+    method: "PUT",
+    body: { workerIds },
+  });
 }
 
 export async function deleteLinkAsync(id) {
-  return apiFetch(`/admin/links/${id}`, { method: "DELETE" });
-}
-
-export async function setUserBadgeAsync(userId, hasReleaseBadge) {
-  return apiFetch(`/admin/users/${userId}`, { method: "PUT", body: { hasReleaseBadge } });
+  return apiFetch(`/admin/links?id=${encodeURIComponent(id)}`, { method: "DELETE" });
 }

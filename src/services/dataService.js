@@ -3,6 +3,11 @@
  * ------------------------------------------------------------------
  * This is the ONLY file that talks to the backend. Every component
  * calls these functions instead of making fetch() calls directly.
+ *
+ * Several backend routes are consolidated into single files (e.g.
+ * /auth handles both signup and login; /admin/users handles listing,
+ * viewing one worker, and updating them) to stay under Vercel's
+ * Hobby-plan limit of 12 serverless functions per deployment.
  * ------------------------------------------------------------------
  */
 
@@ -39,18 +44,18 @@ async function apiFetch(path, options = {}) {
 
 // ---------- auth ----------
 export async function signUp({ email, password }) {
-  const { token, user } = await apiFetch("/auth/signup", {
+  const { token, user } = await apiFetch("/auth", {
     method: "POST",
-    body: { email, password },
+    body: { action: "signup", email, password },
   });
   saveSession(token, user);
   return user;
 }
 
 export async function login({ email, password }) {
-  const { token, user } = await apiFetch("/auth/login", {
+  const { token, user } = await apiFetch("/auth", {
     method: "POST",
-    body: { email, password },
+    body: { action: "login", email, password },
   });
   saveSession(token, user);
   return user;
@@ -124,11 +129,21 @@ export async function getAdminWorkersAsync() {
 }
 
 export async function getWorkerProfileAsync(userId) {
-  return apiFetch(`/admin/users/${userId}`);
+  return apiFetch(`/admin/users?id=${encodeURIComponent(userId)}`);
 }
 
 export async function setUserRoleAsync(userId, role) {
-  return apiFetch(`/admin/users/${userId}`, { method: "PUT", body: { role } });
+  return apiFetch(`/admin/users?id=${encodeURIComponent(userId)}`, {
+    method: "PUT",
+    body: { role },
+  });
+}
+
+export async function setUserBadgeAsync(userId, hasReleaseBadge) {
+  return apiFetch(`/admin/users?id=${encodeURIComponent(userId)}`, {
+    method: "PUT",
+    body: { hasReleaseBadge },
+  });
 }
 
 // ---------- approvals ----------
@@ -137,8 +152,12 @@ export async function getPendingApprovalsAsync() {
 }
 
 export async function decideHoursAsync(entryId, action) {
-  return apiFetch(`/admin/pending/${entryId}`, { method: "PUT", body: { action } });
+  return apiFetch(`/admin/pending?id=${encodeURIComponent(entryId)}`, {
+    method: "PUT",
+    body: { action },
+  });
 }
+
 // ---------- links (worker-facing) ----------
 export async function getMyLinksAsync() {
   return apiFetch("/links");

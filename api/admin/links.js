@@ -11,24 +11,36 @@ export default async function handler(req, res) {
   const { id } = req.query;
 
   if (req.method === "GET") {
-    const result = await query(`
-      SELECT l.id, l.account_name, l.account_email, l.notes, l.status,
-             l.assigned_date, l.released_at,
-             u.id AS worker_id, COALESCE(NULLIF(u.full_name, ''), u.email) AS worker_name
-      FROM links l
-      LEFT JOIN users u ON u.id = l.assigned_worker_id
-      ORDER BY l.created_at DESC
+    const linksResult = await query(`
+      SELECT id, account_name, account_email, notes
+      FROM links ORDER BY created_at DESC
     `);
 
-    const rows = result.rows.map((r) => ({
-      id: r.id,
-      accountName: r.account_name,
-      accountEmail: r.account_email,
-      notes: r.notes || "",
-      status: r.status,
-      assignedDate: r.assigned_date,
-      releasedAt: r.released_at,
-      worker: r.worker_id ? { id: r.worker_id, name: r.worker_name } : null,
+    const assignmentsResult = await query(`
+      SELECT la.link_id, la.id AS assignment_id, la.status, la.worker_id,
+             COALESCE(NULLIF(u.full_name, ''), u.email) AS worker_name
+      FROM link_assignments la
+      JOIN users u ON u.id = la.worker_id
+      ORDER BY la.assigned_at ASC
+    `);
+
+    const assignmentsByLink = {};
+    for (const a of assignmentsResult.rows) {
+      if (!assignmentsByLink[a.link_id]) assignmentsByLink[a.link_id] = [];
+      assignmentsByLink[a.link_id].push({
+        assignmentId: a.assignment_id,
+        workerId: a.worker_id,
+        workerName: a.worker_name,
+        status: a.status,
+      });
+    }
+
+    const rows = linksResult.rows.map((l) => ({
+      id: l.id,
+      accountName: l.account_name,
+      accountEmail: l.account_email,
+      notes: l.notes || "",
+      slots: assignmentsByLink[l.id] || [],
     }));
 
     return res.status(200).json(rows);
@@ -43,8 +55,8 @@ export default async function handler(req, res) {
     }
 
     await query(
-      `INSERT INTO links (account_name, account_email, account_password_encrypted, rdp_password_encrypted, notes, status)
-       VALUES ($1, $2, $3, $4, $5, 'unassigned')`,
+      `INSERT INTO links (account_name, account_email, account_password_encrypted, rdp_password_encrypted, notes)
+       VALUES ($1, $2, $3, $4, $5)`,
       [
         accountName,
         accountEmail,
@@ -57,19 +69,24 @@ export default async function handler(req, res) {
   }
 
   if (req.method === "PUT") {
-    const { workerId, date } = req.body || {};
     if (!id) return res.status(400).json({ error: "id is required." });
-    if (!workerId || !date) {
-      return res.status(400).json({ error: "workerId and date are required to assign a link." });
+    const { workerIds } = req.body || {};
+    const uniqueIds = [...new Set((workerIds || []).filter(Boolean))];
+
+    if (uniqueIds.length === 0) {
+      return res.status(400).json({ error: "Pick at least one worker to assign." });
     }
-    const result = await query(
-      `UPDATE links
-       SET assigned_worker_id = $1, assigned_date = $2, status = 'assigned', released_at = NULL
-       WHERE id = $3`,
-      [workerId, date, id]
-    );
-    if (result.rowCount === 0) {
-      return res.status(404).json({ error: "Link not found." });
+    if (uniqueIds.length > 2) {
+      return res.status(400).json({ error: "A link can only be assigned to up to 2 workers." });
+    }
+
+    await query("DELETE FROM link_assignments WHERE link_id = $1", [id]);
+    for (const workerId of uniqueIds) {
+      await query(
+        `INSERT INTO link_assignments (link_id, worker_id, status)
+         VALUES ($1, $2, 'active')`,
+        [id, workerId]
+      );
     }
     return res.status(200).json({ ok: true });
   }

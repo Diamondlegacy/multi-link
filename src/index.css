@@ -873,13 +873,17 @@ input {
   .sidebar-nav {
     flex-direction: column;
   }
-  .sidebar-link {
-    font-size: 11px;
+ .sidebar-link {
+    flex-direction: column;
+    gap: 4px;
+    font-size: 10px;
     padding: 10px 4px;
     text-align: center;
-    line-height: 1.25;
+    line-height: 1.2;
   }
-  .dashboard-content {
+  .sidebar-label {
+    display: block;
+  }  .dashboard-content {
     padding: 20px 14px;
     max-width: 100%;
   }

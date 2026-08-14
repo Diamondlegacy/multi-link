@@ -1,21 +1,31 @@
 import React from "react";
+import {
+  LayoutDashboard,
+  ClipboardCheck,
+  Link2,
+  Users,
+  Trophy,
+  ShieldCheck,
+  UserCircle,
+  Wallet,
+} from "lucide-react";
 
 const WORKER_NAV = [
-  { id: "dashboard", label: "Dashboard" },
-  { id: "links", label: "Links" },
-  { id: "leaderboard", label: "Top Earners" },
-  { id: "profile", label: "My Profile" },
+  { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { id: "links", label: "Links", icon: Link2 },
+  { id: "leaderboard", label: "Top Earners", icon: Trophy },
+  { id: "profile", label: "My Profile", icon: UserCircle },
 ];
 
 const ADMIN_NAV = [
-  { id: "overview", label: "Overview" },
-  { id: "approvals", label: "Approvals" },
-  { id: "links", label: "Links" },
-  { id: "workers", label: "Workers" },
-  { id: "leaderboard", label: "Top Earners" },
-  { id: "manage-admins", label: "Manage Admins" },
-  { id: "profile", label: "My Profile" },
-  { id: "settings", label: "Pay Rate" },
+  { id: "overview", label: "Overview", icon: LayoutDashboard },
+  { id: "approvals", label: "Approvals", icon: ClipboardCheck },
+  { id: "links", label: "Links", icon: Link2 },
+  { id: "workers", label: "Workers", icon: Users },
+  { id: "leaderboard", label: "Top Earners", icon: Trophy },
+  { id: "manage-admins", label: "Manage Admins", icon: ShieldCheck },
+  { id: "profile", label: "My Profile", icon: UserCircle },
+  { id: "settings", label: "Pay Rate", icon: Wallet },
 ];
 
 export default function Sidebar({ role, active, onSelect }) {
@@ -27,15 +37,19 @@ export default function Sidebar({ role, active, onSelect }) {
         {role === "admin" ? "Admin" : "Worker"}
       </div>
       <nav className="sidebar-nav">
-        {items.map((item) => (
-          <button
-            key={item.id}
-            className={`sidebar-link ${active === item.id ? "sidebar-link-active" : ""}`}
-            onClick={() => onSelect(item.id)}
-          >
-            {item.label}
-          </button>
-        ))}
+        {items.map((item) => {
+          const Icon = item.icon;
+          return (
+            <button
+              key={item.id}
+              className={`sidebar-link ${active === item.id ? "sidebar-link-active" : ""}`}
+              onClick={() => onSelect(item.id)}
+            >
+              <Icon className="sidebar-icon" size={18} strokeWidth={2} />
+              <span className="sidebar-label">{item.label}</span>
+            </button>
+          );
+        })}
       </nav>
     </aside>
   );
